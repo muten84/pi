@@ -1,6 +1,6 @@
 package it.luigibifulco.pi.nunchuck;
 
-import it.luigibifulco.pi.i2c.nunchuck.I2CNunchuckStream;
+import it.luigibifulco.pi.nunchuck.i2c.I2CNunchuckStream;
 
 /**
  * Main test class

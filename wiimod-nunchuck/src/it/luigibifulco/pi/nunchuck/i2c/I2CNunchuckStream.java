@@ -1,4 +1,4 @@
-package it.luigibifulco.pi.i2c.nunchuck;
+package it.luigibifulco.pi.nunchuck.i2c;
 
 import it.luigibifulco.pi.nunchuck.NunchuckStream;
 
