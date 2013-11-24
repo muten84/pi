@@ -1,4 +1,4 @@
-package it.bifulco.luigi.pi.nunchuck;
+package it.luigibifulco.pi.nunchuck;
 
 public interface NunchuckBus {
 

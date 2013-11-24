@@ -1,6 +1,6 @@
-package it.bifulco.luigi.pi.i2c.nunchuck;
+package it.luigibifulco.pi.i2c.nunchuck;
 
-import it.bifulco.luigi.pi.nunchuck.NunchuckStream;
+import it.luigibifulco.pi.nunchuck.NunchuckStream;
 
 import java.io.IOException;
 import java.util.BitSet;

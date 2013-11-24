@@ -1,4 +1,4 @@
-package it.bifulco.luigi.pi.nunchuck;
+package it.luigibifulco.pi.nunchuck;
 
 /**
  * Interface Operation for start and stop the nunchuck stream
