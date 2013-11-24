@@ -104,7 +104,7 @@ public class I2CNunchuckStream implements NunchuckStream {
 				byte[] bytes = new byte[6];
 				int read = device.read(bytes, 0, 6);
 				if (read != 6) {
-					return;
+					continue;
 				}
 				int jX = getUnsigned(bytes[0]);
 				int jY = getUnsigned(bytes[1]);
