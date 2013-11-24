@@ -3,6 +3,7 @@ package it.bifulco.luigi.pi.i2c.nunchuck;
 import it.bifulco.luigi.pi.nunchuck.NunchuckStream;
 
 import java.io.IOException;
+import java.util.BitSet;
 
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
@@ -80,6 +81,15 @@ public class I2CNunchuckStream implements NunchuckStream {
 		return b & 0xff;
 	}
 
+	private static BitSet fromByte(byte b) {
+		BitSet bits = new BitSet(8);
+		for (int i = 0; i < 8; i++) {
+			bits.set(i, (b & 1) == 1);
+			b >>= 1;
+		}
+		return bits;
+	}
+
 	private void startRead() {
 		while (active) {
 			try {
@@ -95,8 +105,10 @@ public class I2CNunchuckStream implements NunchuckStream {
 				int aX = getUnsigned(bytes[2]);
 				int aY = getUnsigned(bytes[3]);
 				int aZ = getUnsigned(bytes[4]);
+				BitSet mask = fromByte(bytes[5]);
+
 				System.out.println(NunchuckSignal.getInstance().update(jX, jY,
-						aX, aY, aZ, false, false));
+						aX, aY, aZ, checkButtonPressed(mask)));
 			} catch (Exception e) {
 
 			}
@@ -104,6 +116,25 @@ public class I2CNunchuckStream implements NunchuckStream {
 		if (!active) {
 			System.out.println("Read from nunchuck stopped");
 		}
+	}
+
+	private String checkButtonPressed(BitSet mask) {
+		boolean bit1 = mask.get(0);
+		boolean bit2 = mask.get(1);
+		if (bit1 && bit2) {
+			return "";
+		} else if (bit1 && !bit2) {
+			return "C";
+		} else if (!bit1 && !bit2) {
+			return "Z";
+		} else if (!bit1 && bit2) {
+			return "CZ";
+		}
+		return "";
+	}
+
+	private boolean checkCPressed(BitSet mask) {
+		return !(mask.get(1));
 	}
 
 	public NunchuckSignal getSignal() {
@@ -116,20 +147,19 @@ public class I2CNunchuckStream implements NunchuckStream {
 		private int aX;
 		private int aY;
 		private int aZ;
-		private boolean zPressed;
-		private boolean cPressed;
+		private String pressedButton;
 
 		private static NunchuckSignal INSTANCE;
 
 		public static synchronized NunchuckSignal getInstance() {
 			if (INSTANCE == null) {
-				INSTANCE = new NunchuckSignal(0, 0, 0, 0, 0, false, false);
+				INSTANCE = new NunchuckSignal(0, 0, 0, 0, 0, "");
 			}
 			return INSTANCE;
 		}
 
 		public synchronized NunchuckSignal update(int jX, int jY, int aX,
-				int aY, int aZ, boolean zPressed, boolean cPressed) {
+				int aY, int aZ, String button) {
 			if (INSTANCE == null) {
 				return null;
 			}
@@ -139,21 +169,20 @@ public class I2CNunchuckStream implements NunchuckStream {
 			INSTANCE.aX = aX;
 			INSTANCE.aY = aY;
 			INSTANCE.aZ = aZ;
-			INSTANCE.zPressed = zPressed;
-			INSTANCE.cPressed = cPressed;
+			INSTANCE.pressedButton = button;
 			return INSTANCE;
 		}
 
 		public NunchuckSignal(int jX, int jY, int aX, int aY, int aZ,
-				boolean zPressed, boolean cPressed) {
+				String pressedButton) {
 			super();
 			this.jX = jX;
 			this.jY = jY;
 			this.aX = aX;
 			this.aY = aY;
 			this.aZ = aZ;
-			this.zPressed = zPressed;
-			this.cPressed = cPressed;
+			this.pressedButton = pressedButton;
+
 		}
 
 		public int getjX() {
@@ -196,27 +225,19 @@ public class I2CNunchuckStream implements NunchuckStream {
 			this.aZ = aZ;
 		}
 
-		public boolean iszPressed() {
-			return zPressed;
+		public String getPressedButton() {
+			return pressedButton;
 		}
 
-		public void setzPressed(boolean zPressed) {
-			this.zPressed = zPressed;
-		}
-
-		public boolean iscPressed() {
-			return cPressed;
-		}
-
-		public void setcPressed(boolean cPressed) {
-			this.cPressed = cPressed;
+		public void setPressedButton(String pressedButton) {
+			this.pressedButton = pressedButton;
 		}
 
 		@Override
 		public String toString() {
 			return "NunchuckSignal [jX=" + jX + ", jY=" + jY + ", aX=" + aX
-					+ ", aY=" + aY + ", aZ=" + aZ + ", zPressed=" + zPressed
-					+ ", cPressed=" + cPressed + "]";
+					+ ", aY=" + aY + ", aZ=" + aZ + ", pressedButton="
+					+ pressedButton + "]";
 		}
 
 	}
