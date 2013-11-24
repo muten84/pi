@@ -1,6 +1,6 @@
 package it.bifulco.luigi.pi.i2c.nunchuck;
 
-import it.bifulco.luigi.pi.i2c.nunchuck.Nunchuck.NunchuckSignal;
+import it.bifulco.luigi.pi.i2c.nunchuck.I2CNunchuckStream.NunchuckSignal;
 
 public interface NunchuckSignalListener {
 

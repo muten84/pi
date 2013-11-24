@@ -1,12 +1,14 @@
 package it.bifulco.luigi.pi.i2c.nunchuck;
 
+import it.bifulco.luigi.pi.nunchuck.NunchuckStream;
+
 import java.io.IOException;
 
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
 import com.pi4j.io.i2c.I2CFactory;
 
-public class Nunchuck {
+public class I2CNunchuckStream implements NunchuckStream {
 
 	private I2CBus i2cBus;
 
@@ -16,15 +18,26 @@ public class Nunchuck {
 
 	private final static int ADDRESS = 0x52;
 
-	public Nunchuck() throws Exception {
-		initialize();
+	private boolean active = false;
 
-		while (true) {
-			startRead();
-		}
+	public I2CNunchuckStream() throws Exception {
+
 	}
 
+	@Override
+	public void start() {
+		active = true;
+		startRead();
+	}
+
+	@Override
+	public void stop() {
+		active = false;
+	}
+
+	@Override
 	public void shutdown() {
+		device = null;
 		try {
 			i2cBus.close();
 		} catch (IOException e) {
@@ -33,6 +46,7 @@ public class Nunchuck {
 		}
 	}
 
+	@Override
 	public void initialize() throws Exception {
 		try {
 			i2cBus = I2CFactory.getInstance(I2CBus.BUS_1);
@@ -44,11 +58,10 @@ public class Nunchuck {
 
 		try {
 
-			// i2cBus.getDevice(ADDRESS).write((byte) 0x40);
-			// i2cBus.getDevice(ADDRESS).write((byte) 0x00);
-
 			i2cBus.getDevice(ADDRESS).write(new byte[] { 0x40, 0x00 }, 0, 2);
-
+			if (device == null) {
+				device = i2cBus.getDevice(ADDRESS);
+			}
 			System.out.println("NUNCHUCK INITIALIZED!!");
 		} catch (IOException e) {
 			System.out.println("Error getting device with addres: " + ADDRESS);
@@ -68,22 +81,27 @@ public class Nunchuck {
 	}
 
 	private void startRead() {
-		try {
-			i2cBus.getDevice(ADDRESS).write((byte) 0x00);
-			byte[] bytes = new byte[6];
-			int read = i2cBus.getDevice(ADDRESS).read(bytes, 0, 6);
-			if (read != 6) {
-				return;
-			}
-			int jX = getUnsigned(bytes[0]);
-			int jY = getUnsigned(bytes[1]);
-			int aX = getUnsigned(bytes[2]);
-			int aY = getUnsigned(bytes[3]);
-			int aZ = getUnsigned(bytes[4]);
-			System.out.println(NunchuckSignal.getInstance().update(jX, jY, aX,
-					aY, aZ, false, false));
-		} catch (Exception e) {
+		while (active) {
+			try {
+				i2cBus.getDevice(ADDRESS).write((byte) 0x00);
+				byte[] bytes = new byte[6];
+				int read = i2cBus.getDevice(ADDRESS).read(bytes, 0, 6);
+				if (read != 6) {
+					return;
+				}
+				int jX = getUnsigned(bytes[0]);
+				int jY = getUnsigned(bytes[1]);
+				int aX = getUnsigned(bytes[2]);
+				int aY = getUnsigned(bytes[3]);
+				int aZ = getUnsigned(bytes[4]);
+				System.out.println(NunchuckSignal.getInstance().update(jX, jY,
+						aX, aY, aZ, false, false));
+			} catch (Exception e) {
 
+			}
+		}
+		if (!active) {
+			System.out.println("Read from nunchuck stopped");
 		}
 	}
 
