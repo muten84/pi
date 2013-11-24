@@ -77,7 +77,7 @@ public class I2CNunchuckStream implements NunchuckStream {
 
 	}
 
-	public void addSignalListener(NunchuckSignalListener listener) {
+	public void setSignalListener(NunchuckSignalListener listener) {
 		if (this.listener == null) {
 			this.listener = listener;
 		}
@@ -87,7 +87,7 @@ public class I2CNunchuckStream implements NunchuckStream {
 		return b & 0xff;
 	}
 
-	private static BitSet fromByte(byte b) {
+	private BitSet fromByte(byte b) {
 		BitSet bits = new BitSet(8);
 		for (int i = 0; i < 8; i++) {
 			bits.set(i, (b & 1) == 1);
@@ -99,22 +99,32 @@ public class I2CNunchuckStream implements NunchuckStream {
 	private void startRead() {
 		while (active) {
 			try {
-				device.write((byte) 0x00);
 				Thread.sleep(100);
-				byte[] bytes = new byte[6];
-				int read = device.read(bytes, 0, 6);
+				device.write((byte) 0x00);
+				Thread.sleep(10);
+				byte[] data = new byte[6];
+				int read = device.read(data, 0, 6);
 				if (read != 6) {
 					continue;
 				}
-				int jX = getUnsigned(bytes[0]);
-				int jY = getUnsigned(bytes[1]);
-				int aX = getUnsigned(bytes[2]);
-				int aY = getUnsigned(bytes[3]);
-				int aZ = getUnsigned(bytes[4]);
-				BitSet mask = fromByte(bytes[5]);
+				int jX = getUnsigned(data[0]);
+				int jY = getUnsigned(data[1]);
+				// int aX = getUnsigned((byte) ((bytes[2] << 2) + ((bytes[5] &
+				// 0x0c) >> 2)));
+				int aX = getAccelX(data[2], data[5]);
+				int aY = getAccelY(data[3], data[5]);
+				int aZ = getAccelZ(data[4], data[5]);
+				/*
+				 * accel_x = (data2 << 2) + ((data5 & 0x0c) >> 2) accel_y =
+				 * (data3 << 2) + ((data5 & 0x30) >> 4) accel_z = (data4 << 2) +
+				 * ((data5 & 0xc0) >> 6)
+				 */
 
-				System.out.println(NunchuckSignal.getInstance().update(jX, jY,
-						aX, aY, aZ, checkButtonPressed(mask)));
+				BitSet mask = fromByte(data[5]);
+
+				System.out.print("\r"
+						+ NunchuckSignal.getInstance().update(jX, jY, aX, aY,
+								aZ, checkButtonPressed(mask)));
 			} catch (Exception e) {
 
 			}
@@ -122,6 +132,24 @@ public class I2CNunchuckStream implements NunchuckStream {
 		if (!active) {
 			System.out.println("Read from nunchuck stopped");
 		}
+	}
+
+	private int getAccelX(byte x, byte pad) {
+		return (0x0000 | (getUnsigned(x) << 2)
+				+ ((getUnsigned(pad) & 0x0c) >> 2));
+
+	}
+
+	private int getAccelY(byte y, byte pad) {
+		return (0x0000 | (getUnsigned(y) << 2)
+				+ ((getUnsigned(pad) & 0x30) >> 4));
+
+	}
+
+	private int getAccelZ(byte y, byte pad) {
+		return (0x0000 | (getUnsigned(y) << 2)
+				+ ((getUnsigned(pad) & 0xc0) >> 6));
+
 	}
 
 	private String checkButtonPressed(BitSet mask) {
@@ -145,6 +173,10 @@ public class I2CNunchuckStream implements NunchuckStream {
 
 	public NunchuckSignal getSignal() {
 		return null;
+	}
+
+	private static enum SumType {
+		X, Y, Z;
 	}
 
 	public static class NunchuckSignal {

@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.luigibifulco.pi</groupId>
 	<artifactId>nunchuck</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<name>WiiMod-Nunchuck</name>
 	<description>Nice interaction with the Nunchuck through I2C channel</description>
 
