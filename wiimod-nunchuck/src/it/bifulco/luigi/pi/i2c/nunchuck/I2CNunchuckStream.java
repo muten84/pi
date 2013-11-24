@@ -20,7 +20,7 @@ public class I2CNunchuckStream implements NunchuckStream {
 
 	private boolean active = false;
 
-	public I2CNunchuckStream() throws Exception {
+	public I2CNunchuckStream() {
 
 	}
 
@@ -83,9 +83,10 @@ public class I2CNunchuckStream implements NunchuckStream {
 	private void startRead() {
 		while (active) {
 			try {
-				i2cBus.getDevice(ADDRESS).write((byte) 0x00);
+				device.write((byte) 0x00);
+				Thread.sleep(100);
 				byte[] bytes = new byte[6];
-				int read = i2cBus.getDevice(ADDRESS).read(bytes, 0, 6);
+				int read = device.read(bytes, 0, 6);
 				if (read != 6) {
 					return;
 				}
