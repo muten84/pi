@@ -9,6 +9,12 @@ import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
 import com.pi4j.io.i2c.I2CFactory;
 
+/**
+ * Realization of the nunchusk stream based on i2c protocol
+ * 
+ * @author Luigi
+ * 
+ */
 public class I2CNunchuckStream implements NunchuckStream {
 
 	private I2CBus i2cBus;

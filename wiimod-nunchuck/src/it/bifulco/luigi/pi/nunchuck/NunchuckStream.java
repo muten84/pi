@@ -1,5 +1,11 @@
 package it.bifulco.luigi.pi.nunchuck;
 
+/**
+ * Interface Operation for start and stop the nunchuck stream
+ * 
+ * @author Luigi
+ * 
+ */
 public interface NunchuckStream {
 
 	/**
