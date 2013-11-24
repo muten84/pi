@@ -8,6 +8,8 @@
 	<description>Nice interaction with the Nunchuck through I2C channel</description>
 
 	<build>
+
+		<!-- <resources> <resource> <directory>src</directory> </resource> </resources> -->
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -23,6 +25,15 @@
 				<version>2.4</version>
 				<configuration>
 					<finalName>nunchuck</finalName>
+					<archive>
+						<index>true</index>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>it.luigibifulco.pi.nunchuck.NunchukTest</mainClass>
+						</manifest>
+						<!-- <manifestEntries> <mode>development</mode> <url>https://github.com/muten84/pi/tree/master/wiimod-nunchuck</url> 
+							</manifestEntries> -->
+					</archive>
 				</configuration>
 			</plugin>
 		</plugins>
