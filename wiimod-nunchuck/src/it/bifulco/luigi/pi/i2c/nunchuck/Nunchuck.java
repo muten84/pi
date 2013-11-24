@@ -12,11 +12,13 @@ public class Nunchuck {
 
 	private NunchuckSignalListener listener;
 
+	private I2CDevice device;
+
 	private final static int ADDRESS = 0x52;
 
 	public Nunchuck() throws Exception {
 		initialize();
-		// startRead();
+
 		while (true) {
 			startRead();
 		}
@@ -42,8 +44,10 @@ public class Nunchuck {
 
 		try {
 
-			i2cBus.getDevice(ADDRESS).write((byte) 0x40);
-			i2cBus.getDevice(ADDRESS).write((byte) 0x00);
+			// i2cBus.getDevice(ADDRESS).write((byte) 0x40);
+			// i2cBus.getDevice(ADDRESS).write((byte) 0x00);
+
+			i2cBus.getDevice(ADDRESS).write(new byte[] { 0x40, 0x00 }, 0, 2);
 
 			System.out.println("NUNCHUCK INITIALIZED!!");
 		} catch (IOException e) {
@@ -53,24 +57,10 @@ public class Nunchuck {
 
 	}
 
-	private int readFromLocalAddress(int localADdress) {
-		byte[] data = new byte[1];
-		try {
-			int bytesRead = i2cBus.getDevice(ADDRESS).read(localADdress, data,
-					0, 1);
-			return getUnsigned(data[0]);
-		} catch (Exception e) {
-			// // System.out.println(e.getMessage());
-			//
-			// try {
-			// i2cBus.getDevice(ADDRESS).write(0x00, (byte) 0x00);
-			// return i2cBus.getDevice(ADDRESS).read(localADdress, data, 0, 1);
-			// } catch (IOException e1) {
-			//
-			// }
-			return -1;
+	public void addSignalListener(NunchuckSignalListener listener) {
+		if (this.listener == null) {
+			this.listener = listener;
 		}
-
 	}
 
 	private int getUnsigned(byte b) {
@@ -94,12 +84,6 @@ public class Nunchuck {
 					aY, aZ, false, false));
 		} catch (Exception e) {
 
-		}
-	}
-
-	public void addSignalListener(NunchuckSignalListener listener) {
-		if (this.listener == null) {
-			this.listener = listener;
 		}
 	}
 
