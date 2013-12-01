@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.luigibifulco.pi</groupId>
 	<artifactId>nunchuck</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.3-SNAPSHOT</version>
 	<name>WiiMod-Nunchuck</name>
 	<description>Nice interaction with the Nunchuck through I2C channel</description>
 
@@ -29,7 +29,7 @@
 						<index>true</index>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>it.luigibifulco.pi.nunchuck.NunchukTest</mainClass>
+							<mainClass>it.luigibifulco.pi.nunchuck.test.NunchukConsoleTest</mainClass>
 						</manifest>
 						<!-- <manifestEntries> <mode>development</mode> <url>https://github.com/muten84/pi/tree/master/wiimod-nunchuck</url> 
 							</manifestEntries> -->

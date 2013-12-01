@@ -1,6 +1,7 @@
 package it.luigibifulco.pi.nunchuck.i2c;
 
 import it.luigibifulco.pi.nunchuck.NunchuckStream;
+import it.luigibifulco.pi.nunchuck.Utils;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -18,8 +19,6 @@ import com.pi4j.io.i2c.I2CFactory;
 public class I2CNunchuckStream implements NunchuckStream {
 
 	private I2CBus i2cBus;
-
-	private NunchuckSignalListener listener;
 
 	private I2CDevice device;
 
@@ -69,7 +68,7 @@ public class I2CNunchuckStream implements NunchuckStream {
 			if (device == null) {
 				device = i2cBus.getDevice(ADDRESS);
 			}
-			System.out.println("NUNCHUCK INITIALIZED!!");
+			// System.out.print("\rNUNCHUCK INITIALIZED!!");
 		} catch (IOException e) {
 			System.out.println("Error getting device with addres: " + ADDRESS);
 			throw e;
@@ -77,79 +76,73 @@ public class I2CNunchuckStream implements NunchuckStream {
 
 	}
 
-	public void setSignalListener(NunchuckSignalListener listener) {
-		if (this.listener == null) {
-			this.listener = listener;
-		}
-	}
-
-	private int getUnsigned(byte b) {
-		return b & 0xff;
-	}
-
-	private BitSet fromByte(byte b) {
-		BitSet bits = new BitSet(8);
-		for (int i = 0; i < 8; i++) {
-			bits.set(i, (b & 1) == 1);
-			b >>= 1;
-		}
-		return bits;
-	}
-
 	private void startRead() {
+		NunchuckSignal.getInstance().runMatrix();
 		while (active) {
 			try {
-				Thread.sleep(100);
 				device.write((byte) 0x00);
-				Thread.sleep(10);
+				Thread.sleep(30);
 				byte[] data = new byte[6];
-				int read = device.read(data, 0, 6);
+				int read = 0;
+				try {
+					read = device.read(data, 0, 6);
+				} catch (Exception e) {
+					// System.out.print("\r" + e.getMessage());
+				}
 				if (read != 6) {
 					continue;
 				}
-				int jX = getUnsigned(data[0]);
-				int jY = getUnsigned(data[1]);
+
+				int jX = Utils.getUnsigned(data[0]);
+				int jY = Utils.getUnsigned(data[1]);
 				// int aX = getUnsigned((byte) ((bytes[2] << 2) + ((bytes[5] &
 				// 0x0c) >> 2)));
 				int aX = getAccelX(data[2], data[5]);
 				int aY = getAccelY(data[3], data[5]);
 				int aZ = getAccelZ(data[4], data[5]);
-				/*
-				 * accel_x = (data2 << 2) + ((data5 & 0x0c) >> 2) accel_y =
-				 * (data3 << 2) + ((data5 & 0x30) >> 4) accel_z = (data4 << 2) +
-				 * ((data5 & 0xc0) >> 6)
-				 */
 
-				BitSet mask = fromByte(data[5]);
+				NunchuckSignal.getInstance().update(jX, jY, aX, aY, aZ,
+						data[5], checkButtonPressed(Utils.fromByte(data[5])));
 
-				System.out.print("\r"
-						+ NunchuckSignal.getInstance().update(jX, jY, aX, aY,
-								aZ, checkButtonPressed(mask)));
+				// System.out.print("\r"
+				// + NunchuckSignal.getInstance().update(jX, jY, aX, aY,
+				// aZ, data[5],
+				// checkButtonPressed(fromByte(data[5]))));
+
 			} catch (Exception e) {
-
+				// System.out.print("\r" + e.getMessage());
+				// e.printStackTrace();
 			}
 		}
 		if (!active) {
-			System.out.println("Read from nunchuck stopped");
+			System.out.print("\rRead from nunchuck stopped");
 		}
 	}
 
+	public static void main(String[] args) {
+		System.out.println(Integer.toBinaryString(0x0c));
+		System.out.println(Integer.toBinaryString(0x30));
+		System.out.println(Integer.toBinaryString(0xc0));
+	}
+
 	private int getAccelX(byte x, byte pad) {
-		return (0x0000 | (getUnsigned(x) << 2)
-				+ ((getUnsigned(pad) & 0x0c) >> 2));
+		int a = (0x0000 | (Utils.getUnsigned(x) << 2));
+		int b = ((Utils.getUnsigned(pad) & 0x0c) >> 2);
+		return a + b;
 
 	}
 
 	private int getAccelY(byte y, byte pad) {
-		return (0x0000 | (getUnsigned(y) << 2)
-				+ ((getUnsigned(pad) & 0x30) >> 4));
+		int a = (0x0000 | (Utils.getUnsigned(y) << 2));
+		int b = ((Utils.getUnsigned(pad) & 0x30) >> 4);
+		return a + b;
 
 	}
 
-	private int getAccelZ(byte y, byte pad) {
-		return (0x0000 | (getUnsigned(y) << 2)
-				+ ((getUnsigned(pad) & 0xc0) >> 6));
-
+	private int getAccelZ(byte z, byte pad) {
+		int a = (0x0000 | (Utils.getUnsigned(z) << 2));
+		int b = ((Utils.getUnsigned(pad) & 0xc0) >> 6);
+		return a + b;
 	}
 
 	private String checkButtonPressed(BitSet mask) {
@@ -167,16 +160,8 @@ public class I2CNunchuckStream implements NunchuckStream {
 		return "";
 	}
 
-	private boolean checkCPressed(BitSet mask) {
-		return !(mask.get(1));
-	}
-
 	public NunchuckSignal getSignal() {
 		return null;
-	}
-
-	private static enum SumType {
-		X, Y, Z;
 	}
 
 	public static class NunchuckSignal {
@@ -186,18 +171,19 @@ public class I2CNunchuckStream implements NunchuckStream {
 		private int aY;
 		private int aZ;
 		private String pressedButton;
+		private int mask;
 
 		private static NunchuckSignal INSTANCE;
 
 		public static synchronized NunchuckSignal getInstance() {
 			if (INSTANCE == null) {
-				INSTANCE = new NunchuckSignal(0, 0, 0, 0, 0, "");
+				INSTANCE = new NunchuckSignal(0, 0, 0, 0, 0, 0, "");
 			}
 			return INSTANCE;
 		}
 
 		public synchronized NunchuckSignal update(int jX, int jY, int aX,
-				int aY, int aZ, String button) {
+				int aY, int aZ, int mask, String button) {
 			if (INSTANCE == null) {
 				return null;
 			}
@@ -207,11 +193,12 @@ public class I2CNunchuckStream implements NunchuckStream {
 			INSTANCE.aX = aX;
 			INSTANCE.aY = aY;
 			INSTANCE.aZ = aZ;
+			INSTANCE.mask = mask;
 			INSTANCE.pressedButton = button;
 			return INSTANCE;
 		}
 
-		public NunchuckSignal(int jX, int jY, int aX, int aY, int aZ,
+		public NunchuckSignal(int jX, int jY, int aX, int aY, int aZ, int mask,
 				String pressedButton) {
 			super();
 			this.jX = jX;
@@ -219,6 +206,7 @@ public class I2CNunchuckStream implements NunchuckStream {
 			this.aX = aX;
 			this.aY = aY;
 			this.aZ = aZ;
+			this.mask = mask;
 			this.pressedButton = pressedButton;
 
 		}
@@ -271,12 +259,79 @@ public class I2CNunchuckStream implements NunchuckStream {
 			this.pressedButton = pressedButton;
 		}
 
+		private String writeRow(int value, int max) {
+			StringBuffer buffer = new StringBuffer();
+			String base = "--------------------------------------------------------------";
+
+			if (value <= 0) {
+				return "+-------------------------------------------------------------";
+			}
+
+			double pos = Math.round((value * base.length()) / max);
+			if (pos <= 0 || pos > base.length()) {
+				return "+-------------------------------------------------------------";
+			}
+			// System.out.print("\r" + pos);
+
+			buffer.append(base.substring(0, ((int) pos) - 1));
+			buffer.append("+");
+			buffer.append(base.substring(((int) pos), base.length() - 1));
+			return buffer.toString();
+		}
+
+		public void runMatrix() {
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					while (true) {
+						try {
+							Thread.sleep(50);
+						} catch (InterruptedException e1) {
+
+						}
+						try {
+							String clear = "";
+							StringBuffer buff = new StringBuffer();
+							buff.append("jX:|"
+									+ writeRow(jX, NunchuckStream.MAX_JX));
+							buff.append("\n");
+							buff.append("jY:|"
+									+ writeRow(jY, NunchuckStream.MAX_JY));
+							buff.append("\n");
+							buff.append("aX:|"
+									+ writeRow(aX, NunchuckStream.MAX_AX));
+							buff.append("\n");
+							buff.append("aY:|"
+									+ writeRow(aY, NunchuckStream.MAX_AY));
+							buff.append("\n");
+							buff.append("aZ:|"
+									+ writeRow(aZ, NunchuckStream.MAX_AY));
+
+							int len = buff.toString().toCharArray().length + 25;
+							for (int i = 0; i < len; i++) {
+								clear += "\b";
+							}
+							for (int i = 0; i < len; i++) {
+								clear += "\b";
+							}
+							System.out.print("\r" + clear);
+							System.out.print("\r" + buff.toString());
+
+						} catch (Exception e) {
+
+						}
+					}
+				}
+			}).start();
+
+		}
+
 		@Override
 		public String toString() {
 			return "NunchuckSignal [jX=" + jX + ", jY=" + jY + ", aX=" + aX
 					+ ", aY=" + aY + ", aZ=" + aZ + ", pressedButton="
-					+ pressedButton + "]";
+					+ pressedButton + ", mask=" + mask + "]";
 		}
-
 	}
 }
