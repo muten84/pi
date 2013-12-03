@@ -108,16 +108,16 @@ public class SimpleNunchuckEventBus implements NunchuckEventBus {
 			if (diff >= 0 && diff <= STATIONARY_THRESHOLD) {
 				setJxStatus(JxStatus.NONE, higher);
 				return;
-			} else if (higher >= (NunchuckCostants.JX_STATIONARY - 20)
-					&& higher <= (NunchuckCostants.JX_STATIONARY + 20)) {
+			} else if (higher >= (NunchuckCostants.JX_STATIONARY - STATIONARY_THRESHOLD)
+					&& higher <= (NunchuckCostants.JX_STATIONARY + STATIONARY_THRESHOLD)) {
 				setJxStatus(JxStatus.CENTER, higher);
 				return;
-			} else if (higher >= (NunchuckCostants.MAX_JX - 20)
-					&& higher <= (NunchuckCostants.MAX_JX + 20)) {
+			} else if (higher >= (NunchuckCostants.MAX_JX - STATIONARY_THRESHOLD)
+					&& higher <= (NunchuckCostants.MAX_JX + STATIONARY_THRESHOLD)) {
 				setJxStatus(JxStatus.RIGHT, higher);
 				return;
-			} else if (lower >= (NunchuckCostants.MIN_JX - 20)
-					&& lower <= (NunchuckCostants.MIN_JX + 20)) {
+			} else if (lower >= (NunchuckCostants.MIN_JX - STATIONARY_THRESHOLD)
+					&& lower <= (NunchuckCostants.MIN_JX + STATIONARY_THRESHOLD)) {
 				setJxStatus(JxStatus.LEFT, lower);
 				return;
 			}
