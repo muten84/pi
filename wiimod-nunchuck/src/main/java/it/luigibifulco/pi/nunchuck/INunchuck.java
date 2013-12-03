@@ -4,4 +4,6 @@ public interface INunchuck {
 
 	void startListen(NunchuckListener listener) throws RuntimeException;
 
+	void stopListen();
+
 }
