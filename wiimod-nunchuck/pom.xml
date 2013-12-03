@@ -29,7 +29,7 @@
 						<index>true</index>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>it.luigibifulco.pi.nunchuck.test.NunchukConsoleTest</mainClass>
+							<mainClass>it.luigibifulco.pi.nunchuck.test.NunchuckMotionEventTest</mainClass>
 						</manifest>
 						<!-- <manifestEntries> <mode>development</mode> <url>https://github.com/muten84/pi/tree/master/wiimod-nunchuck</url> 
 							</manifestEntries> -->
