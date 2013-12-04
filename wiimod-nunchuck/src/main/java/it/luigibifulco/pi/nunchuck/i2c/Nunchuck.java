@@ -137,21 +137,21 @@ public class Nunchuck implements INunchuck {
 	}
 
 	private int getAccelX(byte x, byte pad) {
-		int a = (0x0000 | (Utils.getUnsigned(x) << 2));
+		int a = (0x0000 ^(Utils.getUnsigned(x) << 2));
 		int b = ((Utils.getUnsigned(pad) & 0x0c) >> 2);
 		return a + b;
 
 	}
 
 	private int getAccelY(byte y, byte pad) {
-		int a = (0x0000 | (Utils.getUnsigned(y) << 2));
+		int a = (0x0000 ^ (Utils.getUnsigned(y) << 2));
 		int b = ((Utils.getUnsigned(pad) & 0x30) >> 4);
 		return a + b;
 
 	}
 
 	private int getAccelZ(byte z, byte pad) {
-		int a = (0x0000 | (Utils.getUnsigned(z) << 2));
+		int a = (0x0000 ^ (Utils.getUnsigned(z) << 2));
 		int b = ((Utils.getUnsigned(pad) & 0xc0) >> 6);
 		return a + b;
 	}

@@ -1,7 +1,5 @@
 package it.luigibifulco.pi.nunchuck.test;
 
-import it.luigibifulco.pi.nunchuck.NunchuckStream;
-import it.luigibifulco.pi.nunchuck.i2c.I2CNunchuckStream;
 import it.luigibifulco.pi.nunchuck.service.NunchuckConsole;
 
 /**
